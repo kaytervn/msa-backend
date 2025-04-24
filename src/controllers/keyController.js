@@ -1,4 +1,8 @@
-import { clearMasterKey, setMasterKey } from "../config/appProperties.js";
+import {
+  clearMasterKey,
+  getAppProperties,
+  setMasterKey,
+} from "../config/appProperties.js";
 import { decryptCommonList } from "../encryption/commonEncryption.js";
 import User from "../models/userModel.js";
 import {
@@ -10,6 +14,12 @@ import { ENCRYPT_FIELDS } from "../utils/constant.js";
 
 const inputKey = async (req, res) => {
   const { key } = req.body;
+  if (getAppProperties()) {
+    return makeErrorResponse({
+      res,
+      message: "Key already input",
+    });
+  }
   if (!key || !key.trim()) {
     return makeErrorResponse({
       res,
@@ -29,15 +39,22 @@ const inputKey = async (req, res) => {
 };
 
 const clearKey = async (req, res) => {
-  const users = decryptCommonList(await User.find(), ENCRYPT_FIELDS.USER);
-  for (const user of users) {
-    handleSendMsgLockDevice(user.username);
+  try {
+    const users = decryptCommonList(await User.find(), ENCRYPT_FIELDS.USER);
+    for (const user of users) {
+      handleSendMsgLockDevice(user.username);
+    }
+    clearMasterKey();
+    return makeSuccessResponse({
+      res,
+      message: "Clear key success",
+    });
+  } catch (err) {
+    return makeErrorResponse({
+      res,
+      message: err.message,
+    });
   }
-  clearKey();
-  return makeSuccessResponse({
-    res,
-    message: "Clear key success",
-  });
 };
 
 export { inputKey, clearKey };

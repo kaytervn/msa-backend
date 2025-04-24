@@ -3,11 +3,17 @@ import "dotenv/config.js";
 
 const DATE_FORMAT = "DD/MM/YYYY HH:mm:ss";
 const JSON_LIMIT = "1000mb";
+const OTP_VALIDITY = 1; // 1 minute
 
 const CORS_OPTIONS = {
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-API-Key", "timestamp"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "message-signature",
+    "timestamp",
+  ],
   exposedHeaders: ["Content-Disposition"],
 };
 
@@ -73,7 +79,8 @@ const ENCRYPT_FIELDS = {
   REQUEST_FORGOT_PASSWORD_FORM: ["email"],
   REQUEST_MFA_FORM: ["email", "password"],
   RESET_PASSWORD_FORM: ["userId", "newPassword", "otp"],
-  USER: ["email", "username", "password", "secret", "code"],
+  CHANGE_PASSWORD_FORM: ["oldPassword", "newPassword"],
+  USER: ["email", "username", "password", "secret", "code", ],
   ACCOUNT: ["username", "password", "note"],
   PLATFORM: ["name"],
   CREATE_PLATFORM: ["name"],
@@ -93,4 +100,5 @@ export {
   SOCKET_CMD,
   ENCRYPT_FIELDS,
   ACCOUNT_KIND,
+  OTP_VALIDITY,
 };

@@ -9,7 +9,7 @@ import { CONFIG_KEY } from "../utils/constant.js";
 
 const decryptEbankData = (item, fields) => {
   const secretKey = getConfigValue(CONFIG_KEY.EBANK_KEY);
-  return decryptData(secretKey, item, fields);
+  return decryptData(secretKey, item.toObject ? item.toObject() : item, fields);
 };
 
 const encryptEbankData = (item, fields) => {

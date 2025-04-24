@@ -24,28 +24,32 @@ const handleClearClientSessions = (socket) => {
 
 const clientPingHandler = (io, socket) => {
   socket.on(SOCKET_CMD.CLIENT_PING, (msg) => {
-    const { username, sessionId } = decodeToken(msg.token);
-    if (username) {
-      if (!isValidSession(username, sessionId)) {
+    try {
+      const { username, sessionId } = decodeToken(msg.token);
+      if (username) {
+        if (!isValidSession(username, sessionId)) {
+          handleSendMsgInvalidToken(socket);
+        }
+        ACTIVE_SESSIONS.set(username, socket.id);
+        socket.join(username);
+        io.to(username).emit(
+          SOCKET_CMD.CLIENT_PING,
+          socketSuccessResponse({
+            message: "Ping success with username: " + username,
+          })
+        );
+      } else {
         handleSendMsgInvalidToken(socket);
       }
-      ACTIVE_SESSIONS.set(username, socket.id);
-      socket.join(username);
-      io.to(username).emit(
-        SOCKET_CMD.CLIENT_PING,
-        socketSuccessResponse({
-          message: "Ping success with username: " + username,
-        })
-      );
-    } else {
+    } catch {
       handleSendMsgInvalidToken(socket);
     }
   });
 };
 
 const setupSocket = (io) => {
+  io.use(socketAuth);
   io.on("connection", (socket) => {
-    io.use(socketAuth);
     console.log("Socket connected: ", socket.id);
 
     clientPingHandler(io, socket);

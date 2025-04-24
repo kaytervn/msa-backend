@@ -13,7 +13,7 @@ const socketSuccessResponse = ({ message, data }) => {
 
 const handleSendMsgInvalidToken = (socket) => {
   socket.emit(
-    SOCKET_CMD.CLIENT_PING,
+    SOCKET_CMD.CMD_LOCK_DEVICE,
     socketErrorResponse({
       code: ERROR_CODE.INVALID_TOKEN,
       message: "Invalid token",

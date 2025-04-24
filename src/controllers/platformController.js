@@ -1,7 +1,8 @@
-import { decryptCommonList } from "../encryption/commonEncryption.js";
+import { encryptCommonField } from "../encryption/commonEncryption.js";
 import {
+  decryptAndEncryptDataByUserKey,
+  decryptAndEncryptListByUserKey,
   decryptDataByUserKey,
-  encryptFieldByUserKey,
 } from "../encryption/userKeyEncryption.js";
 import Account from "../models/accountModel.js";
 import Platform from "../models/platformModel.js";
@@ -24,7 +25,7 @@ const createPlatform = async (req, res) => {
         message: "Invalid form",
       });
     }
-    const encryptedName = encryptFieldByUserKey(name);
+    const encryptedName = encryptCommonField(name);
     if (await Platform.findOne({ name: encryptedName })) {
       return makeErrorResponse({
         res,
@@ -58,7 +59,7 @@ const updatePlatform = async (req, res) => {
     if (!platform) {
       return makeErrorResponse({ res, message: "Platform not found" });
     }
-    const encryptedName = encryptFieldByUserKey(name);
+    const encryptedName = encryptCommonField(name);
     const existingPlatform = await Platform.findOne({
       name: encryptedName,
       _id: { $ne: id },
@@ -109,7 +110,11 @@ const getPlatform = async (req, res) => {
     }
     return makeSuccessResponse({
       res,
-      data: platform,
+      data: decryptAndEncryptDataByUserKey(
+        req.token,
+        platform,
+        ENCRYPT_FIELDS.PLATFORM
+      ),
     });
   } catch (error) {
     return makeErrorResponse({ res, message: error.message });
@@ -118,7 +123,8 @@ const getPlatform = async (req, res) => {
 
 const getListPlatforms = async (req, res) => {
   try {
-    const platforms = decryptCommonList(
+    const platforms = decryptAndEncryptListByUserKey(
+      req.token,
       await Platform.find(),
       ENCRYPT_FIELDS.PLATFORM
     );

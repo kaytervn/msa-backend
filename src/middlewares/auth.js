@@ -1,4 +1,5 @@
 import { getAppProperties, getConfigValue } from "../config/appProperties.js";
+import { decryptClientField } from "../encryption/clientEncryption.js";
 import { makeUnauthorizedExecption } from "../services/apiService.js";
 import { isValidSession } from "../services/cacheService.js";
 import { generateMd5 } from "../services/generateService.js";
@@ -7,54 +8,62 @@ import { API_HEADER, CONFIG_KEY, ERROR_CODE } from "../utils/constant.js";
 import { Buffer } from "buffer";
 
 const basicAuth = (req, res, next) => {
-  const err = makeUnauthorizedExecption({
-    res,
-    code: ERROR_CODE.UNAUTHORIZED,
-    message: "Full authentication is required to access this resource",
-  });
-
   const authHeader = req.headers[API_HEADER.AUTHHORIZATION];
-
   if (!authHeader || !authHeader.startsWith("Basic ")) {
-    return err;
+    return makeUnauthorizedExecption({
+      res,
+      code: ERROR_CODE.UNAUTHORIZED,
+      message: "Full authentication is required to access this resource",
+    });
   }
 
-  const base64Credentials = authHeader.split(" ")[1];
-  const credentials = Buffer.from(base64Credentials, "base64").toString(
-    "ascii"
-  );
-  const [username, password] = credentials.split(":");
-  if (
-    username === getConfigValue(CONFIG_KEY.CLIENT_ID) &&
-    password === getConfigValue(CONFIG_KEY.CLIENT_SECRET)
-  ) {
-    return next();
-  }
+  try {
+    const base64Credentials = decryptClientField(authHeader.split(" ")[1]);
+    const credentials = Buffer.from(base64Credentials, "base64").toString(
+      "ascii"
+    );
+    const [username, password] = credentials.split(":");
 
-  return err;
+    if (
+      username === getConfigValue(CONFIG_KEY.CLIENT_ID) &&
+      password === getConfigValue(CONFIG_KEY.CLIENT_SECRET)
+    ) {
+      return next();
+    }
+    return makeUnauthorizedExecption({
+      res,
+      code: ERROR_CODE.UNAUTHORIZED,
+      message: "Full authentication is required to access this resource",
+    });
+  } catch {
+    return makeUnauthorizedExecption({
+      res,
+      code: ERROR_CODE.UNAUTHORIZED,
+      message: "Full authentication is required to access this resource",
+    });
+  }
 };
 
 const bearerAuth = async (req, res, next) => {
-  const err = makeUnauthorizedExecption({
-    res,
-    code: ERROR_CODE.UNAUTHORIZED,
-    message: "Full authentication is required to access this resource",
-  });
-
   const authHeader = req.headers[API_HEADER.AUTHHORIZATION];
-
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return err;
+    return makeUnauthorizedExecption({
+      res,
+      code: ERROR_CODE.UNAUTHORIZED,
+      message: "Full authentication is required to access this resource",
+    });
   }
 
-  const accessToken = authHeader.split(" ")[1];
   try {
+    const accessToken = decryptClientField(authHeader.split(" ")[1]);
     const token = verifyToken(accessToken);
     const { username, sessionId } = token;
+
     if (isValidSession(username, sessionId)) {
       req.token = token;
       return next();
     }
+
     return makeUnauthorizedExecption({
       res,
       code: ERROR_CODE.INVALID_SESSION,
@@ -79,43 +88,52 @@ const socketAuth = (socket, next) => {
 };
 
 const checkSystemReady = (req, res, next) => {
-  const err = makeUnauthorizedExecption({
-    res,
-    code: ERROR_CODE.SYSTEM_NOT_READY,
-    message: "System not ready",
-  });
   try {
     const props = getAppProperties();
     if (!props[CONFIG_KEY.MONGODB_URI]) {
-      return err;
+      return makeUnauthorizedExecption({
+        res,
+        code: ERROR_CODE.SYSTEM_NOT_READY,
+        message: "System not ready",
+      });
     }
-    next();
+    return next();
   } catch {
-    return err;
+    return makeUnauthorizedExecption({
+      res,
+      code: ERROR_CODE.SYSTEM_NOT_READY,
+      message: "System not ready",
+    });
   }
 };
 
 const verifySignature = async (req, res, next) => {
-  const err = makeUnauthorizedExecption({
-    res,
-    code: ERROR_CODE.INVALID_SIGNATURE,
-    message: "Invalid message signature",
-  });
-
-  const messageSignature = req.headers[API_HEADER.MESSAGE_SIGNATURE];
-  const timestamp = req.headers[API_HEADER.TIMESTAMP];
+  const messageSignature = decryptClientField(
+    req.headers[API_HEADER.MESSAGE_SIGNATURE]
+  );
+  const timestamp = decryptClientField(req.headers[API_HEADER.TIMESTAMP]);
 
   if (!messageSignature || !timestamp) {
-    return err;
+    return makeUnauthorizedExecption({
+      res,
+      code: ERROR_CODE.INVALID_SIGNATURE,
+      message: "Invalid message signature",
+    });
   }
 
   try {
     const clientId = getConfigValue(CONFIG_KEY.CLIENT_ID);
     const clientSecret = getConfigValue(CONFIG_KEY.CLIENT_SECRET);
     const systemSignature = generateMd5(clientId + clientSecret + timestamp);
+
     if (messageSignature !== systemSignature) {
-      return err;
+      return makeUnauthorizedExecption({
+        res,
+        code: ERROR_CODE.INVALID_SIGNATURE,
+        message: "Invalid message signature",
+      });
     }
+
     return next();
   } catch (error) {
     return makeUnauthorizedExecption({ res, message: error.message });

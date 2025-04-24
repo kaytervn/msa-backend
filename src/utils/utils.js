@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
-import { DATE_FORMAT } from "./constant.js";
+import { DATE_FORMAT, OTP_VALIDITY } from "./constant.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -32,9 +32,19 @@ const getNestedValue = (obj, path, defaultValue = null) => {
   return path.split(".").reduce((acc, key) => acc?.[key], obj) ?? defaultValue;
 };
 
+const verifyTimestamp = (timestamp) => {
+  const createdAt = new Date(timestamp);
+  const now = new Date();
+  if ((now - createdAt) / (60 * 1000) > OTP_VALIDITY) {
+    return false;
+  }
+  return true;
+};
+
 export {
   formatDateUTC,
   isValidUrl,
   extractAppNameFromMongoUri,
   getNestedValue,
+  verifyTimestamp,
 };

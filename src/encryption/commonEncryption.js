@@ -9,7 +9,7 @@ import { CONFIG_KEY } from "../utils/constant.js";
 
 const decryptCommonData = (item, fields) => {
   const secretKey = getConfigValue(CONFIG_KEY.COMMON_KEY);
-  return decryptData(secretKey, item, fields);
+  return decryptData(secretKey, item.toObject ? item.toObject() : item, fields);
 };
 
 const encryptCommonData = (item, fields) => {

@@ -4,7 +4,7 @@ import {
   encryptAES,
   encryptData,
 } from "../services/encryptionService.js";
-import { decryptCommonField } from "./commonEncryption.js";
+import { decryptCommonData, decryptCommonField } from "./commonEncryption.js";
 
 const getUserKey = (token) => {
   const { secretKey } = token;
@@ -39,6 +39,17 @@ const decryptListByUserKey = (token, list, fields) => {
   return list.map((item) => decryptDataByUserKey(token, item, fields)) || [];
 };
 
+const decryptAndEncryptDataByUserKey = (token, item, fields) => {
+  return encryptDataByUserKey(token, decryptCommonData(item, fields), fields);
+};
+
+const decryptAndEncryptListByUserKey = (token, list, fields) => {
+  return (
+    list.map((item) => decryptAndEncryptDataByUserKey(token, item, fields)) ||
+    []
+  );
+};
+
 export {
   getUserKey,
   decryptFieldByUserKey,
@@ -47,4 +58,6 @@ export {
   encryptDataByUserKey,
   decryptListByUserKey,
   encryptListByUserKey,
+  decryptAndEncryptListByUserKey,
+  decryptAndEncryptDataByUserKey,
 };

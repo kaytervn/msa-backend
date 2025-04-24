@@ -4,7 +4,7 @@ import { LRUCache } from "lru-cache";
 import dbConfig from "./dbConfig.js";
 import { decryptRSA } from "../services/encryptionService.js";
 
-let APP_PROPERTIES = {};
+let APP_PROPERTIES = null;
 let LRU_CACHE = null;
 
 const getAppProperties = () => APP_PROPERTIES;
@@ -27,21 +27,22 @@ const initCache = () => {
 };
 
 const setMasterKey = async (masterKey) => {
+  APP_PROPERTIES = {};
   const mongoUri = decryptRSA(masterKey, ENV.MONGODB_URI);
   if (!mongoUri) {
     throw new Error("Invalid key");
   }
   APP_PROPERTIES[CONFIG_KEY.MONGODB_URI] = mongoUri;
-  initCache();
   dbConfig();
   const configData = await Config.find({ kind: CONFIG_KIND.SYSTEM });
   configData.forEach((config) => {
     APP_PROPERTIES[config.key] = decryptRSA(masterKey, config.value);
   });
+  initCache();
 };
 
 const clearMasterKey = () => {
-  APP_PROPERTIES = {};
+  APP_PROPERTIES = null;
   LRU_CACHE = null;
 };
 

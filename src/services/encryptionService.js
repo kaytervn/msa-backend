@@ -29,10 +29,9 @@ const encryptAES = (secretKey, plainText) => {
       }
     );
     return encrypted.toString();
-  } catch (error) {
-    console.error(error);
+  } catch {
+    return null;
   }
-  return null;
 };
 
 const decryptAES = (secretKey, encryptedStr) => {
@@ -47,10 +46,9 @@ const decryptAES = (secretKey, encryptedStr) => {
     );
     const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
     return decryptedText;
-  } catch (error) {
-    console.error(error);
+  } catch {
+    return null;
   }
-  return null;
 };
 
 const decryptData = (secretKey, item, fields) => {
@@ -129,8 +127,7 @@ const encryptRSA = (publicKeyRawBase64, data) => {
 
     const encryptedBytes = publicKey.encrypt(data, "RSAES-PKCS1-V1_5");
     return forge.util.encode64(encryptedBytes);
-  } catch (err) {
-    console.error("Encryption failed:", err.message);
+  } catch {
     return null;
   }
 };
