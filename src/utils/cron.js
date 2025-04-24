@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import https from "https";
-import { CONFIG_KEY, ENV } from "./constant.js";
+import { CONFIG_KEY } from "./constant.js";
 import { getConfigValue } from "../config/appProperties.js";
 
 dayjs.extend(utc);
@@ -18,7 +18,7 @@ const jobs = {
       return;
     }
     https
-      .get(ENV.APP_URL, (res) => {
+      .get(url, (res) => {
         if (res.statusCode == 200) {
           console.log(`[WARN] GET request sent successfully to ${url}`);
         } else {
