@@ -1,4 +1,3 @@
-import { socketAuth } from "../middlewares/auth.js";
 import { SOCKET_CMD } from "../utils/constant.js";
 import {
   handleSendMsgInvalidToken,
@@ -6,7 +5,9 @@ import {
 } from "../services/socketService.js";
 import { isValidSession } from "../services/cacheService.js";
 import { decodeToken } from "../services/jwtService.js";
+import CaroGame from "./caroGame.js";
 
+const game = new CaroGame();
 const ACTIVE_SESSIONS = new Map(); // username - socket.id
 
 const getActiveSessions = () => {
@@ -47,15 +48,56 @@ const clientPingHandler = (io, socket) => {
   });
 };
 
+const caroGameHandler = (io, socket) => {
+  game.players.add(socket.id);
+
+  socket.emit("game-state", {
+    board: game.gameState,
+    currentPlayer: game.currentPlayer,
+    gameActive: game.gameActive,
+  });
+
+  socket.on("make-move", ({ index, player }) => {
+    const result = game.makeMove(index, player, socket.id);
+
+    if (result.success) {
+      io.emit("move-made", {
+        index,
+        player,
+        currentPlayer: game.currentPlayer,
+        gameActive: game.gameActive,
+      });
+
+      if (result.gameOver) {
+        io.emit("game-over", {
+          winner: player,
+          winningCells: result.winningCells,
+        });
+      }
+    }
+  });
+
+  socket.on("restart-game", () => {
+    game.resetGame();
+    io.emit("game-reset", {
+      board: game.gameState,
+      currentPlayer: game.currentPlayer,
+      gameActive: game.gameActive,
+    });
+  });
+};
+
 const setupSocket = (io) => {
-  io.use(socketAuth);
+  // io.use(socketAuth);
   io.on("connection", (socket) => {
     console.log("Socket connected: ", socket.id);
 
     clientPingHandler(io, socket);
+    caroGameHandler(io, socket);
 
     socket.on("disconnect", () => {
       console.log("Socket disconnected: ", socket.id);
+      game.players.delete(socket.id);
       handleClearClientSessions(socket);
     });
   });
