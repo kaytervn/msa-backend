@@ -11,7 +11,7 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const jobs = {
-  activeService: new cron.CronJob("*/10 * * * *", async function () {
+  activeService: new cron.CronJob("* * * * *", async function () {
     const url = getConfigValue(CONFIG_KEY.API_URL);
     if (!url) {
       console.log("[WARN] No app url found");
