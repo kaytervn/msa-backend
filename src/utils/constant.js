@@ -2,8 +2,10 @@
 import "dotenv/config.js";
 
 const DATE_FORMAT = "DD/MM/YYYY HH:mm:ss";
+const TIMEZONE = "Asia/Ho_Chi_Minh";
 const JSON_LIMIT = "1000mb";
 const OTP_VALIDITY = 1; // 1 minute
+const RELOAD_INTERVAL = 30000; // 30 seconds
 
 const CORS_OPTIONS = {
   origin: "*",
@@ -28,6 +30,8 @@ const ENV = {
   SERVER_PORT: process.env.PORT,
   MONGODB_URI: process.env.MONGODB_URI,
   MASTER_KEY: process.env.MASTER_KEY,
+  X_API_KEY: process.env.X_API_KEY,
+  UPLOAD_DIR: process.env.UPLOAD_DIR,
 };
 
 const SOCKET_CMD = {
@@ -80,11 +84,42 @@ const ENCRYPT_FIELDS = {
   REQUEST_MFA_FORM: ["email", "password"],
   RESET_PASSWORD_FORM: ["userId", "newPassword", "otp"],
   CHANGE_PASSWORD_FORM: ["oldPassword", "newPassword"],
-  USER: ["email", "username", "password", "secret", "code", ],
+  USER: ["email", "username", "password", "secret", "code"],
   ACCOUNT: ["username", "password", "note"],
   PLATFORM: ["name"],
   CREATE_PLATFORM: ["name"],
   UPDATE_PLATFORM: ["id", "name"],
+};
+
+const MIME_TYPES = {
+  // Images
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+  ".bmp": "image/bmp",
+
+  // Videos
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
+  ".ogg": "video/ogg",
+  ".m3u8": "application/x-mpegURL",
+  ".ts": "video/mp2t",
+
+  // Soundtracks
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
+
+  // Documents
+  ".pdf": "application/pdf",
+  ".txt": "text/plain",
+  ".csv": "text/csv",
+  ".json": "application/json",
+  ".xml": "application/xml",
+  ".md": "text/markdown",
+  ".html": "text/html",
 };
 
 export {
@@ -101,4 +136,7 @@ export {
   ENCRYPT_FIELDS,
   ACCOUNT_KIND,
   OTP_VALIDITY,
+  RELOAD_INTERVAL,
+  MIME_TYPES,
+  TIMEZONE,
 };

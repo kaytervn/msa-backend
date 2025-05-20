@@ -6,13 +6,15 @@ import timezone from "dayjs/plugin/timezone.js";
 import https from "https";
 import { CONFIG_KEY } from "./constant.js";
 import { getConfigValue } from "../config/appProperties.js";
+import axios from "axios";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const url = getConfigValue(CONFIG_KEY.API_URL);
+
 const jobs = {
   activeService: new cron.CronJob("* * * * *", async function () {
-    const url = getConfigValue(CONFIG_KEY.API_URL);
     if (!url) {
       console.log("[WARN] No app url found");
       return;
@@ -36,4 +38,22 @@ const startAllJobs = () => {
   console.log("All cron jobs have been started");
 };
 
-export { jobs, startAllJobs };
+const reloadWebsite = () => {
+  axios
+    .get(url)
+    .then((response) => {
+      console.log(
+        `Reloaded at ${new Date().toISOString()}: Status Code ${
+          response.status
+        }`
+      );
+    })
+    .catch((error) => {
+      console.error(
+        `Error reloading at ${new Date().toISOString()}:`,
+        error.message
+      );
+    });
+};
+
+export { jobs, startAllJobs, reloadWebsite };
