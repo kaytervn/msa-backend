@@ -15,6 +15,7 @@ const CORS_OPTIONS = {
     "Authorization",
     "message-signature",
     "timestamp",
+    "x-api-key",
   ],
   exposedHeaders: ["Content-Disposition"],
 };
