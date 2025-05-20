@@ -11,10 +11,13 @@ import axios from "axios";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const url = getConfigValue(CONFIG_KEY.API_URL);
+const getAppUrl = () => {
+  return getConfigValue(CONFIG_KEY.API_URL);
+};
 
 const jobs = {
   activeService: new cron.CronJob("* * * * *", async function () {
+    const url = getAppUrl();
     if (!url) {
       console.log("[WARN] No app url found");
       return;
@@ -40,7 +43,7 @@ const startAllJobs = () => {
 
 const reloadWebsite = () => {
   axios
-    .get(url)
+    .get(getAppUrl())
     .then((response) => {
       console.log(
         `Reloaded at ${new Date().toISOString()}: Status Code ${
